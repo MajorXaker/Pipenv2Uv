@@ -22,7 +22,9 @@ impl UVSource for Source {
 
         if self.url.starts_with("${") {
             println!("UV Does not support reading .ENV values for pyproject.toml");
-            println!("Use path without credentials and supply login and password through ENV variables.")
+            println!(
+                "Use path without credentials and supply login and password through ENV variables."
+            )
         }
 
         // verify_ssl not implemented yet

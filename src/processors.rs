@@ -1,7 +1,7 @@
-use std::collections::HashMap;
-use crate::models::source::Source;
 use crate::models::package::Package;
 use crate::models::pipenv::Pipenv;
+use crate::models::source::Source;
+use std::collections::HashMap;
 
 fn parse_to_hashmap(source_block: &Vec<String>) -> HashMap<String, String> {
     let mut map = HashMap::new();
@@ -25,7 +25,12 @@ pub fn parse_source_block(source_block: &Vec<String>) -> Source {
 
     Source {
         name,
-        url: lines_map.get("url").unwrap().clone().trim_matches('"').to_string(),
+        url: lines_map
+            .get("url")
+            .unwrap()
+            .clone()
+            .trim_matches('"')
+            .to_string(),
         verify_ssl: lines_map.get("verify_ssl").cloned(),
     }
 }
@@ -40,7 +45,7 @@ pub fn parse_pipenv_block(pipenv_block: &Vec<String>) -> Pipenv {
 }
 
 fn parse_package(package_line: &String, is_dev: bool) -> Package {
-    let split: Option<(&str, &str)> = package_line.split_once('=',);
+    let split: Option<(&str, &str)> = package_line.split_once('=');
 
     let sp2 = split.unwrap_or(("", ""));
 
@@ -85,13 +90,14 @@ fn parse_package(package_line: &String, is_dev: bool) -> Package {
         let extras: Option<Vec<String>>;
         let extras_regex = regex::Regex::new(r#"extras\s?=\s?\[(["\w,]+)]"#).unwrap();
         if let Some(caps) = extras_regex.captures(&extended_package_data) {
-            extras = Some(caps
-                .get(1)
-                .unwrap()
-                .as_str()
-                .split(',')
-                .map(|s| s.trim_matches('"').to_string())
-                .collect());
+            extras = Some(
+                caps.get(1)
+                    .unwrap()
+                    .as_str()
+                    .split(',')
+                    .map(|s| s.trim_matches('"').to_string())
+                    .collect(),
+            );
         } else {
             extras = None;
         }
@@ -126,7 +132,6 @@ pub fn parse_packages_block(packages_block: &Vec<String>, is_dev: bool) -> Vec<P
         }
         let package = parse_package(line, is_dev);
         packages.push(package);
-
     }
     packages
 }

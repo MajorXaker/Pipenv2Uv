@@ -3,11 +3,6 @@ pub trait UVPackage {
     fn state_source(&self) -> String;
 }
 
-// pub trait PipenvPackage {
-//     fn as_pipenv(&self) -> String;
-//     fn new() -> Self;
-// }
-
 pub struct Package {
     pub name: String,
     pub version: String,
@@ -40,11 +35,11 @@ impl UVPackage for Package {
 
     fn state_source(&self) -> String {
         let index_name: &str = self.index.as_ref().unwrap();
-        let string = format!("{package} = {{index=\"{index}\"}}",
-                             index = index_name,
-                             package = self.name,
+        let string = format!(
+            "{package} = {{index=\"{index}\"}}",
+            index = index_name,
+            package = self.name,
         );
         string
     }
-
 }

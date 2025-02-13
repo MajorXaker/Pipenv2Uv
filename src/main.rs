@@ -1,11 +1,11 @@
 mod models;
 mod processors;
 
-use std::fs::{File};
-use std::io::{BufRead, BufReader, Write};
 use models::package::{Package, UVPackage};
 use models::pipenv::Pipenv;
 use models::source::{Source, UVSource};
+use std::fs::File;
+use std::io::{BufRead, BufReader, Write};
 fn open_file(filename: &str) -> std::io::Result<BufReader<File>> {
     let file = File::open(filename)?;
     Ok(BufReader::new(file))
@@ -18,7 +18,7 @@ pub trait PipenvUVInterface {
 struct PipenvContent {
     sources: Vec<Source>,
     packages: Vec<Package>,
-    pipenv: Pipenv
+    pipenv: Pipenv,
 }
 
 impl PipenvUVInterface for PipenvContent {
@@ -29,7 +29,8 @@ impl PipenvUVInterface for PipenvContent {
 name = "description-processor"
 version = "0.1.0"
 description = "Add your description here"
-readme = "README.md""#.to_string();
+readme = "README.md""#
+            .to_string();
 
         // start with general project data
         resulting_lines.push_str(&static_lines);
@@ -86,12 +87,14 @@ readme = "README.md""#.to_string();
                 resulting_lines.push_str(&ln);
                 resulting_lines.push_str("\n");
             }
-
         }
 
         println!(
             "Allow pre-releases handling not yet implemented. Current: {}",
-            self.pipenv.allow_prereleases.clone().unwrap_or("false".to_string())
+            self.pipenv
+                .allow_prereleases
+                .clone()
+                .unwrap_or("false".to_string())
         );
 
         resulting_lines
@@ -113,7 +116,10 @@ fn read_lines(reader: BufReader<File>) -> Result<PipenvContent, std::io::Error> 
         let line = line?;
 
         if line.starts_with('[') && line.ends_with(']') {
-            let new_block_name = line.trim_start_matches('[').trim_end_matches(']').to_string();
+            let new_block_name = line
+                .trim_start_matches('[')
+                .trim_end_matches(']')
+                .to_string();
 
             if !line_buffer.is_empty() {
                 match process_previous_buffer(block_name.as_str(), &line_buffer, line.as_str()) {
@@ -131,33 +137,29 @@ fn read_lines(reader: BufReader<File>) -> Result<PipenvContent, std::io::Error> 
             }
             block_name = new_block_name;
             line_buffer.clear();
-
         } else {
             line_buffer.push(line);
         }
-
-
     }
-    Ok(
-        PipenvContent {
-            sources,
-            packages,
-            pipenv,
-        }
-    )
+    Ok(PipenvContent {
+        sources,
+        packages,
+        pipenv,
+    })
 }
-
-
 
 enum BufferResultEnum<A, B, C> {
     SourceResult(A),
     PipenvResult(B),
     PackagesResult(C),
-    UnknownResult
+    UnknownResult,
 }
 
-
-fn process_previous_buffer(block_name: &str, line_buffer: &Vec<String>, line: &str) -> BufferResultEnum<Source, Pipenv, Vec<Package>> {
+fn process_previous_buffer(
+    block_name: &str,
+    line_buffer: &Vec<String>,
+    line: &str,
+) -> BufferResultEnum<Source, Pipenv, Vec<Package>> {
     match block_name {
         "source" => {
             // println!("Processing source block");
@@ -185,8 +187,6 @@ fn process_previous_buffer(block_name: &str, line_buffer: &Vec<String>, line: &s
         }
     }
 }
-
-
 
 fn create_file_for_writing(filename: &str) -> File {
     let mut new_filename = String::from(filename);

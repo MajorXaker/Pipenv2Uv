@@ -9,3 +9,7 @@ path = "src/main.rs"
 
 [dependencies]
 regex = "1.11.1" # Error handling
+
+[features]
+fmt = []
+lint = []

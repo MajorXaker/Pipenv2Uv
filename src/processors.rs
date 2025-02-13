@@ -12,7 +12,7 @@ fn parse_to_hashmap(source_block: &Vec<String>) -> HashMap<String, String> {
 
         let parts: Vec<&str> = line.split('=').collect();
         let key = parts[0].trim().to_string();
-        let value = parts[1].trim().to_string();
+        let value = parts[1].trim().trim_matches('"').to_string();
         map.insert(key, value);
     }
     map
@@ -134,4 +134,100 @@ pub fn parse_packages_block(packages_block: &Vec<String>, is_dev: bool) -> Vec<P
         packages.push(package);
     }
     packages
+}
+
+pub enum BufferResultEnum<A, B, C> {
+    SourceResult(A),
+    PipenvResult(B),
+    PackagesResult(C),
+    UnknownResult,
+}
+
+pub fn process_previous_buffer(
+    block_name: &str,
+    line_buffer: &Vec<String>,
+    line: &str,
+) -> BufferResultEnum<Source, Pipenv, Vec<Package>> {
+    match block_name {
+        "source" => {
+            // println!("Processing source block");
+            let source_block = parse_source_block(line_buffer);
+            BufferResultEnum::SourceResult(source_block)
+        }
+        "pipenv" => {
+            // println!("Processing pipenv block");
+            let pipenv_block = parse_pipenv_block(line_buffer);
+            BufferResultEnum::PipenvResult(pipenv_block)
+        }
+        "packages" => {
+            // println!("Processing packages block");
+            let packages = parse_packages_block(line_buffer, false);
+            BufferResultEnum::PackagesResult(packages)
+        }
+        "dev-packages" => {
+            // println!("Processing dev-packages block");
+            let packages = parse_packages_block(line_buffer, true);
+            BufferResultEnum::PackagesResult(packages)
+        }
+        _ => {
+            println!("Unknown block: {}", line);
+            BufferResultEnum::UnknownResult
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_source_block() {
+        let source_block = vec![
+            String::from("name = \"pypi\""),
+            String::from("url = \"https://pypi.org/simple\""),
+            String::from("verify_ssl = \"true\""),
+        ];
+
+        let source = parse_source_block(&source_block);
+
+        assert_eq!(source.name, "pypi");
+        assert_eq!(source.url, "https://pypi.org/simple");
+        assert_eq!(source.verify_ssl.unwrap(), "true");
+    }
+
+    #[test]
+    fn test_parse_pipenv_block() {
+        let pipenv_block = vec![
+            String::from("python_version = \"3.8\""),
+            String::from("allow_prereleases = true"),
+        ];
+
+        let pipenv = parse_pipenv_block(&pipenv_block);
+
+        assert_eq!(pipenv.python_version, "3.8");
+        assert_eq!(pipenv.allow_prereleases.unwrap(), "true");
+    }
+
+    #[test]
+    fn test_parse_package() {
+        let package_line = String::from("requests = {version=\">=2.25.1\", extras=[socks]}");
+
+        let package = parse_package(&package_line, false);
+
+        assert_eq!(package.name, "requests");
+        assert_eq!(package.version, ">=2.25.1");
+        assert_eq!(package.extras.unwrap(), vec!["socks".to_string()]);
+    }
+
+    #[test]
+    fn test_parse_packages_block() {
+        let packages_block = vec![
+            String::from("requests = \">=2.25.1\""),
+            String::from("requests = {version=\">=2.25.1\", extras=[socks]}"),
+        ];
+
+        let packages = parse_packages_block(&packages_block, false);
+
+        assert_eq!(packages.len(), 2);
+    }
 }

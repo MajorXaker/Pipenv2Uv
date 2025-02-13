@@ -43,3 +43,37 @@ impl UVPackage for Package {
         string
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_as_uv_with_extras() {
+        let package = Package {
+            name: "requests".to_string(),
+            version: "==2.25.1".to_string(),
+            index: None,
+            extras: Some(vec!["socks".to_string()]),
+            is_dev: false,
+        };
+
+        let expected = r#""requests[socks]==2.25.1""#;
+        let result = package.as_uv();
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_state_source() {
+        let package = Package {
+            name: "requests".to_string(),
+            version: "2.25.1".to_string(),
+            index: Some("pypi".to_string()),
+            extras: None,
+            is_dev: false,
+        };
+
+        let expected = "requests = {index=\"pypi\"}".to_string();
+        assert_eq!(package.state_source(), expected);
+    }
+}

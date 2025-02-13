@@ -32,10 +32,30 @@ impl UVSource for Source {
 
         if verify_ssl == "true" {
             println!("SSL verification is not implemented yet!")
-        }
+        };
 
         result_string.push_str("explicit = true");
 
         result_string
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_uv_source() {
+        let source = Source {
+            name: "pypi".to_string(),
+            url: "https://pypi.org/simple".to_string(),
+            verify_ssl: Some("true".to_string()),
+        };
+
+        let expected = r#"name = "pypi"
+url = "https://pypi.org/simple"
+explicit = true"#;
+        let uv_source = source.as_uv();
+        assert_eq!(uv_source, expected);
     }
 }

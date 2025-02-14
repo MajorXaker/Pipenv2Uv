@@ -1,0 +1,7 @@
+services:
+  processor:
+    build: .
+    volumes:
+      - ./Pipfile:/app/Pipfile
+      - ./output/:/app/output/
+    command: ["./Pipenv2Uv"]

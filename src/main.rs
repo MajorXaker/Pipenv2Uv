@@ -1,11 +1,14 @@
 mod models;
 mod processors;
+mod utils;
 
+use crate::utils::get_output_file_name;
 use models::package::Package;
 use models::pipenv::Pipenv;
 use models::pipenv_content::{PipenvContent, PipenvUVInterface};
 use models::source::Source;
 use processors::BufferResultEnum;
+use std::env;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Write};
 
@@ -66,28 +69,38 @@ fn read_lines(reader: BufReader<File>) -> Result<PipenvContent, std::io::Error> 
 }
 
 fn create_file_for_writing(filename: &str) -> File {
-    let mut new_filename = String::from(filename);
-    let mut counter = 1;
-    while std::path::Path::new(&new_filename).exists() {
-        println!("File {} already exists, creating new", new_filename);
-        new_filename = format!("new-{}-{}", counter, filename);
-        counter += 1;
-    }
-    let export_file = File::create(&new_filename).expect("Unable to create file");
-    export_file
+    let current_dir = env::current_dir().expect("Failed to get current directory");
+    let full_path = current_dir.join(filename).to_str().unwrap().to_string();
+    File::create(&filename).expect(&format!(
+        "Unable to create new file in current directory: {}",
+        full_path,
+    ))
 }
 
-fn main() {
+fn process_data() -> Result<(), std::io::Error> {
     println!("Reading Pipfile's content");
-    let filename = "Pipfile";
-    let reader = open_file(filename).unwrap();
-    let file_content: PipenvContent = read_lines(reader).unwrap();
+    let original_file = "Pipfile";
+    let reader = open_file(original_file).expect("Cannot open Pipfile");
+    let file_content: PipenvContent =
+        read_lines(reader).expect("Error while reading Pipfile content");
 
     let exported_lines: String = file_content.export();
 
-    let filename = "pyproject.toml".to_string();
+    let is_docker = env::var("DOCKER").unwrap_or("0".to_string()) == "1";
+    let result_filename = get_output_file_name(is_docker);
 
-    let mut export_file: File = create_file_for_writing(&filename);
+    println!("Saving processed data to {}", result_filename);
 
-    write!(export_file, "{}", exported_lines).expect("Writing failed");
+    let mut export_file: File = create_file_for_writing(&result_filename);
+
+    write!(export_file, "{}", exported_lines).expect("Writing to file failed");
+
+    Ok(())
+}
+
+fn main() {
+    match process_data() {
+        Ok(_) => println!("Processing completed successfully"),
+        Err(e) => eprintln!("Error: {}", e),
+    }
 }

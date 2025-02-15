@@ -71,8 +71,12 @@ fn read_lines(reader: BufReader<File>) -> Result<PipenvContent, std::io::Error> 
 fn create_file_for_writing(filename: &str) -> File {
     let current_dir = env::current_dir().expect("Failed to get current directory");
     let full_path = current_dir.join(filename).to_str().unwrap().to_string();
-    File::create(filename).unwrap_or_else(|_| panic!("Unable to create new file in current directory: {}", full_path))
-
+    File::create(filename).unwrap_or_else(|_| {
+        panic!(
+            "Unable to create new file in current directory: {}",
+            full_path
+        )
+    })
 }
 
 fn process_data() -> Result<(), std::io::Error> {

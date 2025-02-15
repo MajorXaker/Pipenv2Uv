@@ -18,7 +18,7 @@ jobs:
       - name: Check formatting
         with:
           rust-version: 'stable'
-          components: rustfmt', 'clippy' ]
+          components: ['rustfmt', 'clippy' ]
         run: |
           cargo fmt --all --check --verbose
           cargo clippy --all-targets --all-features -- -D warnings

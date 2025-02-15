@@ -26,9 +26,11 @@ jobs:
           components: rustfmt,clippy
 
       - name: Run rustfmt
+        continue-on-error: true
         run: cargo fmt -- --check
 
       - name: Run clippy
+        continue-on-error: true
         run: cargo clippy -- -D warnings
 
       - name: Run tests

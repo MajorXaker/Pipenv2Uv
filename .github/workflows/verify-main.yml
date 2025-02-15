@@ -1,0 +1,33 @@
+name: Test & Build & Package
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check formatting
+        with:
+          rust-version: 'stable'
+          components: [ 'rustfmt', 'clippy' ]
+        run: |
+          cargo fmt --all --check --verbose
+          cargo clippy --all-targets --all-features -- -D warnings
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Tests
+        run: |
+          cargo test
+          cargo test --no-default-features
+

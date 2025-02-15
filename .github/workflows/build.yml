@@ -14,7 +14,10 @@ jobs:
   build-and-upload:
     name: Build and Upload
     runs-on: ${{ matrix.os }}
-
+    permissions:
+      contents: write
+      actions: read
+      checks: write
     strategy:
       matrix:
         include:

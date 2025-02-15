@@ -50,9 +50,15 @@ jobs:
           # Make Rust compile to our target (defined in the matrix)
           targets: ${{ matrix.target }}
 
-      - name: Get the release version from the tag
+      - name: Set version
         shell: bash
-        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+        run: |
+          if [ -n "${GITHUB_REF}" ] && [[ "${GITHUB_REF}" =~ ^refs/tags/ ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+          else
+            VERSION=${VERSION}
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Build
         uses: actions-rs/cargo@v1

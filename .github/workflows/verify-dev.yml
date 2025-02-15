@@ -1,4 +1,4 @@
-name: Test & Build & Package
+name: Verify Dev
 
 env:
   REGISTRY: ghcr.io

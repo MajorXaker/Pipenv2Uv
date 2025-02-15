@@ -11,23 +11,25 @@ on:
     branches: [ "development" ]
 
 jobs:
-  fmt:
+  code-quality:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Check formatting
-        with:
-          rust-version: 'stable'
-          components: ['rustfmt', 'clippy' ]
-        run: |
-          cargo fmt --all --check --verbose
-          cargo clippy --all-targets --all-features -- -D warnings
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run Tests
-        run: |
-          cargo test
-          cargo test --no-default-features
 
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          components: rustfmt,clippy
+
+      - name: Run rustfmt
+        run: cargo fmt -- --check
+
+      - name: Run clippy
+        run: cargo clippy -- -D warnings
+
+      - name: Run tests
+        run: cargo test

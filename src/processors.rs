@@ -44,7 +44,7 @@ pub fn parse_pipenv_block(pipenv_block: &Vec<String>) -> Pipenv {
     }
 }
 
-fn parse_package(package_line: &String, is_dev: bool) -> Package {
+fn parse_package(package_line: &str, is_dev: bool) -> Package {
     let split: Option<(&str, &str)> = package_line.split_once('=');
 
     let sp2 = split.unwrap_or(("", ""));
@@ -73,7 +73,7 @@ fn parse_package(package_line: &String, is_dev: bool) -> Package {
         let version_regex = regex::Regex::new(r#"version\s?=\s?"([\d<>=,.*]+)""#).unwrap();
 
         let version: &str;
-        if let Some(caps) = version_regex.captures(&extended_package_data) {
+        if let Some(caps) = version_regex.captures(extended_package_data) {
             version = caps.get(1).unwrap().as_str().trim_matches('"');
         } else {
             version = package_version;
@@ -81,7 +81,7 @@ fn parse_package(package_line: &String, is_dev: bool) -> Package {
 
         let index_regex = regex::Regex::new(r#"index\s?=\s?"(\w+)""#).unwrap();
         let index: Option<String>;
-        if let Some(caps) = index_regex.captures(&extended_package_data) {
+        if let Some(caps) = index_regex.captures(extended_package_data) {
             index = Some(caps.get(1).unwrap().as_str().trim_matches('"').to_string());
         } else {
             index = None;
@@ -89,7 +89,7 @@ fn parse_package(package_line: &String, is_dev: bool) -> Package {
 
         let extras: Option<Vec<String>>;
         let extras_regex = regex::Regex::new(r#"extras\s?=\s?\[(["\w,]+)]"#).unwrap();
-        if let Some(caps) = extras_regex.captures(&extended_package_data) {
+        if let Some(caps) = extras_regex.captures(extended_package_data) {
             extras = Some(
                 caps.get(1)
                     .unwrap()
@@ -102,14 +102,13 @@ fn parse_package(package_line: &String, is_dev: bool) -> Package {
             extras = None;
         }
 
-        let package = Package {
+        Package {
             name: package_name.to_string(),
             version: version.to_string(),
-            index: index,
+            index,
             extras,
             is_dev,
-        };
-        package
+        }
     } else {
         let package: Package = Package {
             name: package_name.to_string(),
@@ -137,10 +136,10 @@ pub fn parse_packages_block(packages_block: &Vec<String>, is_dev: bool) -> Vec<P
 }
 
 pub enum BufferResultEnum<A, B, C> {
-    SourceResult(A),
-    PipenvResult(B),
-    PackagesResult(C),
-    UnknownResult,
+    Source(A),
+    Pipenv(B),
+    Packages(C),
+    Unknown,
 }
 
 pub fn process_previous_buffer(
@@ -152,26 +151,26 @@ pub fn process_previous_buffer(
         "source" => {
             // println!("Processing source block");
             let source_block = parse_source_block(line_buffer);
-            BufferResultEnum::SourceResult(source_block)
+            BufferResultEnum::Source(source_block)
         }
         "pipenv" => {
             // println!("Processing pipenv block");
             let pipenv_block = parse_pipenv_block(line_buffer);
-            BufferResultEnum::PipenvResult(pipenv_block)
+            BufferResultEnum::Pipenv(pipenv_block)
         }
         "packages" => {
             // println!("Processing packages block");
             let packages = parse_packages_block(line_buffer, false);
-            BufferResultEnum::PackagesResult(packages)
+            BufferResultEnum::Packages(packages)
         }
         "dev-packages" => {
             // println!("Processing dev-packages block");
             let packages = parse_packages_block(line_buffer, true);
-            BufferResultEnum::PackagesResult(packages)
+            BufferResultEnum::Packages(packages)
         }
         _ => {
             println!("Unknown block: {}", line);
-            BufferResultEnum::UnknownResult
+            BufferResultEnum::Unknown
         }
     }
 }

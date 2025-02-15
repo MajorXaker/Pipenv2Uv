@@ -43,13 +43,13 @@ fn read_lines(reader: BufReader<File>) -> Result<PipenvContent, std::io::Error> 
                     &line_buffer,
                     line.as_str(),
                 ) {
-                    BufferResultEnum::SourceResult(processed_source) => {
+                    BufferResultEnum::Source(processed_source) => {
                         sources.push(processed_source);
                     }
-                    BufferResultEnum::PipenvResult(processed_pipenv) => {
+                    BufferResultEnum::Pipenv(processed_pipenv) => {
                         pipenv = processed_pipenv;
                     }
-                    BufferResultEnum::PackagesResult(processed_packages) => {
+                    BufferResultEnum::Packages(processed_packages) => {
                         packages.extend(processed_packages);
                     }
                     _ => {}
@@ -71,10 +71,8 @@ fn read_lines(reader: BufReader<File>) -> Result<PipenvContent, std::io::Error> 
 fn create_file_for_writing(filename: &str) -> File {
     let current_dir = env::current_dir().expect("Failed to get current directory");
     let full_path = current_dir.join(filename).to_str().unwrap().to_string();
-    File::create(&filename).expect(&format!(
-        "Unable to create new file in current directory: {}",
-        full_path,
-    ))
+    File::create(filename).unwrap_or_else(|_| panic!("Unable to create new file in current directory: {}", full_path))
+
 }
 
 fn process_data() -> Result<(), std::io::Error> {

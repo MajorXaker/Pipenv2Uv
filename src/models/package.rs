@@ -28,7 +28,7 @@ impl UVPackage for Package {
             result_string.push_str(&self.version);
         }
 
-        result_string.push_str(r#"""#);
+        result_string.push('"');
 
         result_string
     }

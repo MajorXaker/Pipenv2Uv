@@ -28,11 +28,11 @@ readme = "README.md""#
 
         // start with general project data
         resulting_lines.push_str(&static_lines);
-        resulting_lines.push_str("\n");
+        resulting_lines.push('\n');
 
         let python_v_line: String = format!("requires-python = \"{}\"", self.pipenv.python_version);
         resulting_lines.push_str(&python_v_line);
-        resulting_lines.push_str("\n");
+        resulting_lines.push('\n');
 
         let mut dev_dependencies: Vec<&Package> = Vec::new();
         let mut indexed_packages: Vec<&Package> = Vec::new();
@@ -44,7 +44,7 @@ readme = "README.md""#
                 dev_dependencies.push(package);
                 continue;
             }
-            resulting_lines.push_str("\t");
+            resulting_lines.push('\t');
             resulting_lines.push_str(&package.as_uv());
             resulting_lines.push_str(",\n");
 
@@ -63,7 +63,7 @@ readme = "README.md""#
         resulting_lines.push_str("[dependency-groups]\n");
         resulting_lines.push_str("dev = [\n");
         for package in dev_dependencies {
-            resulting_lines.push_str("\t");
+            resulting_lines.push('\t');
             resulting_lines.push_str(&package.as_uv());
             resulting_lines.push_str(",\n");
         }
@@ -80,12 +80,12 @@ readme = "README.md""#
             resulting_lines.push_str("\n\n");
         }
 
-        if indexed_packages.len() > 0 {
+        if !indexed_packages.is_empty() {
             resulting_lines.push_str("[tool.uv.sources]\n");
             for dependant_package in indexed_packages {
                 let ln: String = dependant_package.state_source();
                 resulting_lines.push_str(&ln);
-                resulting_lines.push_str("\n");
+                resulting_lines.push('\n');
             }
         }
 
@@ -98,20 +98,20 @@ readme = "README.md""#
         let (project_lines, dev_dependencies, indexed_packages) = self._export_project_part();
 
         resulting_lines.push_str(&project_lines);
-        resulting_lines.push_str("\n");
+        resulting_lines.push('\n');
 
         // adding some dev dependecies if there are any
-        if dev_dependencies.len() > 0 {
+        if !dev_dependencies.is_empty() {
             let dev_dependencies_lines = self._prepare_dev_dependencies(dev_dependencies);
             resulting_lines.push_str(&dev_dependencies_lines);
-            resulting_lines.push_str("\n");
+            resulting_lines.push('\n');
         }
 
         // setting info on indexes and sources
-        if self.sources.len() > 0 {
+        if !self.sources.is_empty() {
             let sources_lines = self._prepare_sources(indexed_packages);
             resulting_lines.push_str(&sources_lines);
-            resulting_lines.push_str("\n");
+            resulting_lines.push('\n');
         }
 
         println!(

@@ -1,5 +1,4 @@
 use crate::models::package::Package;
-use crate::models::pipenv::Pipenv;
 use crate::models::source::Source;
 use std::collections::HashMap;
 
@@ -32,15 +31,6 @@ pub fn parse_source_block(source_block: &Vec<String>) -> Source {
             .trim_matches('"')
             .to_string(),
         verify_ssl: lines_map.get("verify_ssl").cloned(),
-    }
-}
-
-pub fn parse_pipenv_block(pipenv_block: &Vec<String>) -> Pipenv {
-    let lines_map = parse_to_hashmap(pipenv_block);
-
-    Pipenv {
-        python_version: lines_map.get("python_version").unwrap().clone(),
-        allow_prereleases: lines_map.get("allow_prereleases").cloned(),
     }
 }
 
@@ -135,31 +125,25 @@ pub fn parse_packages_block(packages_block: &Vec<String>, is_dev: bool) -> Vec<P
     packages
 }
 
-pub enum BufferResultEnum<A, B, C> {
+pub enum BufferResultEnum<A, B> {
     Source(A),
-    Pipenv(B),
-    Packages(C),
+    Packages(B),
+    SkippedBlock, // Used when a block is not processed
     Unknown,
 }
 
 pub fn process_previous_buffer(
     block_name: &str,
     line_buffer: &Vec<String>,
-    line: &str,
-) -> BufferResultEnum<Source, Pipenv, Vec<Package>> {
+) -> BufferResultEnum<Source, Vec<Package>> {
     match block_name {
         "source" => {
-            // println!("Processing source block");
             let source_block = parse_source_block(line_buffer);
             BufferResultEnum::Source(source_block)
         }
-        "pipenv" => {
-            // println!("Processing pipenv block");
-            let pipenv_block = parse_pipenv_block(line_buffer);
-            BufferResultEnum::Pipenv(pipenv_block)
-        }
+        "pipenv" => BufferResultEnum::SkippedBlock,
+        "requires" => BufferResultEnum::SkippedBlock,
         "packages" => {
-            // println!("Processing packages block");
             let packages = parse_packages_block(line_buffer, false);
             BufferResultEnum::Packages(packages)
         }
@@ -169,7 +153,7 @@ pub fn process_previous_buffer(
             BufferResultEnum::Packages(packages)
         }
         _ => {
-            println!("Unknown block: {}", line);
+            println!("Unknown block: {}", block_name);
             BufferResultEnum::Unknown
         }
     }
@@ -192,19 +176,6 @@ mod tests {
         assert_eq!(source.name, "pypi");
         assert_eq!(source.url, "https://pypi.org/simple");
         assert_eq!(source.verify_ssl.unwrap(), "true");
-    }
-
-    #[test]
-    fn test_parse_pipenv_block() {
-        let pipenv_block = vec![
-            String::from("python_version = \"3.8\""),
-            String::from("allow_prereleases = true"),
-        ];
-
-        let pipenv = parse_pipenv_block(&pipenv_block);
-
-        assert_eq!(pipenv.python_version, "3.8");
-        assert_eq!(pipenv.allow_prereleases.unwrap(), "true");
     }
 
     #[test]
